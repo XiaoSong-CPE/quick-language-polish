@@ -21,7 +21,7 @@ A minimal Bun + TypeScript + Vite + Vue app on Cloudflare Workers that refines t
 2. Configure credentials:
 
    ```bash
-   cp .env.example .dev.vars
+   cp .env.example .env
    ```
 
    Update `AUTH_USERNAME` and `AUTH_PASSWORD` with your own values.
