@@ -17,15 +17,13 @@ type Bindings = {
   ASSETS: AssetsBinding;
   AUTH_USERNAME: string;
   AUTH_PASSWORD: string;
-  AI_MODEL?: string;
 };
 
 const AVAILABLE_MODELS = [
-  "@cf/meta/llama-3.2-3b-instruct",
-  "@cf/meta/llama-3.1-8b-instruct-fast",
   "@cf/meta/llama-4-scout-17b-16e-instruct",
   "@cf/qwen/qwen3-30b-a3b-fp8",
   "@cf/google/gemma-4-26b-a4b-it",
+  "@cf/openai/gpt-oss-120b",
 ] as const;
 
 const requestSchema = z.object({
@@ -65,8 +63,6 @@ const extractPolishedText = (result: unknown): string | null => {
   return null;
 };
 
-// Parse CF AI SSE stream tokens client-side now.
-
 app.post(
   "/api/polish",
   basicAuth({
@@ -104,13 +100,14 @@ app.post(
       clientModel &&
       (AVAILABLE_MODELS as readonly string[]).includes(clientModel)
         ? clientModel
-        : c.env.AI_MODEL || "@cf/meta/llama-3.2-3b-instruct";
+        : "@cf/meta/llama-4-scout-17b-16e-instruct";
 
     try {
       const result = await c.env.AI.run(model, {
         messages: [{ role: "user", content: createPrompt(text) }],
         stream: true,
         max_tokens: 4 * 1024,
+        max_completion_tokens: 4 * 1024,
       });
 
       // Pass the CF AI stream through directly — the client will parse the raw CF SSE format

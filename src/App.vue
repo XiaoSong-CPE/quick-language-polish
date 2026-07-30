@@ -3,11 +3,10 @@ import { useLocalStorage, useClipboard } from "@vueuse/core";
 import { ref } from "vue";
 
 const MODELS = [
-  { id: "@cf/meta/llama-3.2-3b-instruct", label: "Llama 3.2 3B (Fast)" },
-  { id: "@cf/meta/llama-3.1-8b-instruct-fast", label: "Llama 3.1 8B (Fast)" },
   { id: "@cf/meta/llama-4-scout-17b-16e-instruct", label: "Llama 4 Scout 17B" },
   { id: "@cf/qwen/qwen3-30b-a3b-fp8", label: "Qwen 3 30B" },
   { id: "@cf/google/gemma-4-26b-a4b-it", label: "Gemma 4 26B" },
+  { id: "@cf/openai/gpt-oss-120b", label: "GPT-OSS 120B" },
 ] as const;
 
 const username = useLocalStorage("qlp-username", "");
@@ -72,7 +71,9 @@ const polishText = async () => {
       return;
     }
 
-    // Parse raw CF AI SSE stream: data: {"response":"token"}  or  data: [DONE]
+    // Parse CF AI SSE stream — Workers AI binding returns OpenAI-compatible
+    // SSE format: data: {"choices":[{"delta":{"content":"token"}}]}
+    // or data: [DONE]
     const reader = response.body?.getReader();
     if (!reader) {
       errorMessage.value = "No response body received.";
@@ -97,9 +98,13 @@ const polishText = async () => {
 
         try {
           const parsed = JSON.parse(data);
-          // CF AI returns { response: "token text" } for each chunk
-          if (typeof parsed.response === "string" && parsed.response) {
-            polishedText.value += parsed.response;
+          // OpenAI-compatible: choices[0].delta.content
+          const token =
+            parsed.choices?.[0]?.delta?.content ??
+            // Fallback: legacy CF format { response: "token" }
+            (typeof parsed.response === "string" ? parsed.response : null);
+          if (typeof token === "string" && token) {
+            polishedText.value += token;
           }
         } catch {
           // skip unparseable
