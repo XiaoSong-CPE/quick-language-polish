@@ -42,7 +42,7 @@ const REFUSAL_PATTERN =
   /\b(i(?:'| a)?m sorry|i can(?:not|'t|’t)|unable to|won't|will not|cannot assist|can't assist)\b/i;
 
 const createPrompt = (text: string) =>
-  `Refine this text for natural English fluency, correcting any awkward or non-native phrasing. Return ONLY the polished text, nothing else. Do not use quotes.\n\n${text}`;
+  `Refine this text for natural fluency, correcting any awkward or non-native phrasing. Return ONLY the polished text, nothing else. Do not use quotes.\n\n${text}`;
 
 const extractPolishedText = (result: unknown): string | null => {
   if (typeof result === "string") {
@@ -66,10 +66,21 @@ const extractPolishedText = (result: unknown): string | null => {
 
 app.post(
   "/api/polish",
-  basicAuth({
-    verifyUser: (username, password, c) =>
-      username === c.env.AUTH_USERNAME && password === c.env.AUTH_PASSWORD,
-  }),
+  // Only require auth when credentials are configured.
+  // When AUTH_USERNAME or AUTH_PASSWORD is missing, the endpoint is open.
+  async (c, next) => {
+    const user = c.env.AUTH_USERNAME?.trim();
+    const pass = c.env.AUTH_PASSWORD?.trim();
+    if (user && pass) {
+      const auth = basicAuth({
+        verifyUser: (username, password) =>
+          username === user && password === pass,
+      });
+      await auth(c, next);
+    } else {
+      await next();
+    }
+  },
   zValidator("json", requestSchema, (validationResult, c) => {
     if (!validationResult.success) {
       return c.json(
@@ -85,13 +96,6 @@ app.post(
     if (!c.env.AI || typeof c.env.AI.run !== "function") {
       return c.json(
         { error: "AI binding is missing. Configure `AI` in wrangler.jsonc." },
-        StatusCodes.INTERNAL_SERVER_ERROR,
-      );
-    }
-
-    if (!c.env.AUTH_USERNAME || !c.env.AUTH_PASSWORD) {
-      return c.json(
-        { error: "Missing AUTH_USERNAME or AUTH_PASSWORD configuration." },
         StatusCodes.INTERNAL_SERVER_ERROR,
       );
     }

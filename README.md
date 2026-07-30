@@ -1,71 +1,113 @@
-# quick-language-polish
+# Quick Language Polish ✨
 
-A minimal Bun + TypeScript + Vite + Vue app on Cloudflare Workers that refines text with Workers AI.
+[English](README.md) · [Deutsch](README.de.md) · [简体中文](README.zh-CN.md)
+
+A Cloudflare Workers application built with Bun, TypeScript, Vite, and Vue that refines text using Workers AI. Try the [live demo](https://quick-language-polish.karsten-zhou-773.workers.dev/).
+
+For everyday use, deploy your own instance to Cloudflare to use your own free Workers AI quota. You can one-click deploy with the button above, or follow the manual setup below.
+
+[![Deploy to Cloudflare Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/XiaoSong-CPE/quick-language-polish)
+
+![Quick Language Polish screenshot](image.png)
+
+## Features
+
+- AI-powered text polishing
+- Multiple Cloudflare AI models to choose from
+- Streaming responses (SSE)
+- Simple HTTP Basic Auth protection
+- One-click deployment to Cloudflare Workers
 
 ## Requirements
 
-- Bun (recommended package manager/runtime)
-- Node.js 22+ (fallback)
-- Cloudflare account with Workers AI enabled
+- [Bun](https://bun.sh) (recommended) or Node.js 22+
+- A Cloudflare account with [Workers AI](https://developers.cloudflare.com/workers-ai/) enabled
 
 ## Setup
 
-1. Install dependencies:
+### 1. Install dependencies
 
-   ```bash
-   bun install
-   ```
+```bash
+bun install
+# or: npm install
+```
 
-   (or `npm install`)
+### 2. Configure credentials (optional but recommended)
 
-2. Configure credentials:
+The app works without authentication — anyone with the URL can use your instance. If you'd like to protect it, configure credentials.
 
-   ```bash
-   cp .env.example .env
-   ```
+Copy the example environment file and edit it:
 
-   Update `AUTH_USERNAME` and `AUTH_PASSWORD` with your own values.
+```bash
+cp .env.example .env
+```
 
-   For production, upload the same secrets to Cloudflare:
+Set `AUTH_USERNAME` and `AUTH_PASSWORD` in `.env` to your own credentials.
 
-   ```bash
-   bunx wrangler secret put AUTH_USERNAME
-   bunx wrangler secret put AUTH_PASSWORD
-   ```
+For production, upload the same secrets to Cloudflare:
 
-   > **Note:** Avoid storing these as plain `vars` in `wrangler.jsonc` — secrets are encrypted at rest and not visible in the Cloudflare dashboard.
+```bash
+bunx wrangler secret put AUTH_USERNAME
+bunx wrangler secret put AUTH_PASSWORD
+```
 
-3. Run locally:
+> **Note:** Don't store credentials as plain `vars` in `wrangler.jsonc`. Use Cloudflare Secrets instead — they're encrypted at rest and aren't exposed in the Cloudflare dashboard.
+>
+> **⚠️ If you skip this step**, your instance will be publicly accessible. Anyone with the URL can use it and consume your free Workers AI quota. This is convenient for personal use but not recommended for shared or production environments.
 
-   ```bash
-   bun run dev
-   ```
+### 3. Run locally
 
-4. Build:
+```bash
+bun run dev
+```
 
-   ```bash
-   bun run build
-   ```
+### 4. Build
 
-5. Deploy:
+```bash
+bun run build
+```
 
-   ```bash
-   bun run deploy
-   ```
+### 5. Deploy
 
-## API behavior
+```bash
+bun run deploy
+```
 
-- `POST /api/polish` requires HTTP Basic auth.
-- Request body: `{ "text": "...", "model?": "@cf/meta/llama-3.2-3b-instruct" }`
-- Response: SSE stream (`text/event-stream`) with `data: {"response":"token"}` chunks and a final `data: [DONE]`.
-- Available models (selectable in the UI):
-  - `@cf/meta/llama-3.2-3b-instruct` — Llama 3.2 3B
-  - `@cf/meta/llama-3.1-8b-instruct-fast` — Llama 3.1 8B
-  - `@cf/meta/llama-4-scout-17b-16e-instruct` — Llama 4 Scout 17B
-  - `@cf/qwen/qwen3-30b-a3b-fp8` — Qwen 3 30B
-  - `@cf/google/gemma-4-26b-a4b-it` — Gemma 4 26B
-- Common errors are surfaced in UI:
-  - bad credentials (`401`)
-  - invalid input (`400`)
-  - model refusal (detected client-side)
-  - AI/runtime failures (`502` / `500`)
+## API
+
+### `POST /api/polish`
+
+Supports optional **HTTP Basic Auth**. If `AUTH_USERNAME` and `AUTH_PASSWORD` Secrets are configured, the client authenticates using the username and password entered in the UI. If not configured, authentication is skipped and the endpoint is open.
+
+**Request body:**
+
+```json
+{
+  "text": "Your text to refine",
+  "model": "@cf/qwen/qwen3-30b-a3b-fp8"
+}
+```
+
+The `model` field is optional and defaults to `@cf/meta/llama-4-scout-17b-16e-instruct`.
+
+**Response:** Returns an SSE (`text/event-stream`) response in an OpenAI-compatible streaming format, with `data: {"choices":[{"delta":{"content":"token"}}]}` chunks followed by `data: [DONE]`.
+
+### Available models
+
+| Model ID                                  | Label                            |
+| ----------------------------------------- | -------------------------------- |
+| `@cf/meta/llama-4-scout-17b-16e-instruct` | Llama 4 Scout 17B _(default)_    |
+| `@cf/qwen/qwen3-30b-a3b-fp8`              | Qwen 3 30B                       |
+| `@cf/google/gemma-4-26b-a4b-it`           | Gemma 4 26B                      |
+| `@cf/openai/gpt-oss-120b`                 | GPT-OSS 120B                     |
+| `@cf/moonshotai/kimi-k2.6`                | Kimi K2.6 _(paid plan required)_ |
+
+### Error responses
+
+| Status | Meaning                                               |
+| ------ | ----------------------------------------------------- |
+| `400`  | Invalid request (missing or malformed input)          |
+| `401`  | Bad credentials — check your username and password    |
+| `422`  | Model refused the request                             |
+| `500`  | Server misconfiguration (missing bindings or secrets) |
+| `502`  | Workers AI runtime failure                            |

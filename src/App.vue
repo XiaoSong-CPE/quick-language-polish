@@ -1,6 +1,15 @@
 <script setup lang="ts">
 import { useLocalStorage, useClipboard } from "@vueuse/core";
 import { ref } from "vue";
+import { useI18n } from "vue-i18n";
+
+const { t, locale } = useI18n();
+
+const LANGUAGES = [
+  { code: "en", label: "English" },
+  { code: "de", label: "Deutsch" },
+  { code: "zh-CN", label: "简体中文" },
+] as const;
 
 const MODELS = [
   { id: "@cf/meta/llama-4-scout-17b-16e-instruct", label: "Llama 4 Scout 17B" },
@@ -26,7 +35,7 @@ const polishText = async () => {
   errorMessage.value = "";
 
   if (!text.value.trim()) {
-    errorMessage.value = "Please enter text to polish.";
+    errorMessage.value = t("errors.emptyText");
     return;
   }
 
@@ -58,13 +67,13 @@ const polishText = async () => {
       }
 
       if (response.status === 401) {
-        errorMessage.value = "Authentication failed. Check account/password.";
+        errorMessage.value = t("errors.authFailed");
       } else if (errorBody?.code === "AI_REFUSAL") {
-        errorMessage.value =
-          errorBody.error ?? "The AI model refused the request.";
+        errorMessage.value = errorBody.error ?? t("errors.modelRefused");
       } else {
         errorMessage.value =
-          errorBody?.error ?? `Request failed with status ${response.status}.`;
+          errorBody?.error ??
+          t("errors.statusCode", { status: response.status });
       }
       if (errorBody?.details) {
         errorMessage.value = `${errorMessage.value} (${errorBody.details})`;
@@ -77,7 +86,7 @@ const polishText = async () => {
     // or data: [DONE]
     const reader = response.body?.getReader();
     if (!reader) {
-      errorMessage.value = "No response body received.";
+      errorMessage.value = t("errors.noResponseBody");
       return;
     }
 
@@ -122,11 +131,11 @@ const polishText = async () => {
         polishedText.value,
       )
     ) {
-      errorMessage.value = "The AI model refused to process this input.";
+      errorMessage.value = t("errors.modelRefused");
       polishedText.value = "";
     }
   } catch {
-    errorMessage.value = "Unexpected error while calling the API.";
+    errorMessage.value = t("errors.unexpected");
   } finally {
     loading.value = false;
   }
@@ -140,13 +149,53 @@ const copyPolishedText = () => {
 <template>
   <div class="min-h-screen bg-gradient-to-br from-slate-50 to-indigo-50">
     <main class="max-w-3xl mx-auto px-4 py-10">
+      <!-- Language switcher + GitHub link -->
+      <div class="flex justify-end items-center gap-3 mb-4">
+        <a
+          href="https://github.com/XiaoSong-CPE/quick-language-polish"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="text-slate-500 hover:text-slate-800 transition"
+          :title="t('githubRepo')"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="size-5"
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              fill-rule="evenodd"
+              clip-rule="evenodd"
+              d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"
+            />
+          </svg>
+        </a>
+        <div
+          class="relative inline-flex rounded-lg border border-slate-300 bg-white p-1 shadow-sm"
+        >
+          <button
+            v-for="lang in LANGUAGES"
+            :key="lang.code"
+            @click="locale = lang.code"
+            :class="[
+              'px-3 py-1 text-xs font-medium rounded-md transition cursor-pointer',
+              locale === lang.code
+                ? 'bg-indigo-600 text-white shadow-sm'
+                : 'text-slate-600 hover:bg-slate-100',
+            ]"
+          >
+            {{ lang.label }}
+          </button>
+        </div>
+      </div>
+
       <header class="mb-8 text-center">
         <h1 class="text-4xl font-bold text-slate-800 tracking-tight">
-          ✨ Quick Language Polish
+          {{ t("title") }}
         </h1>
         <p class="mt-2 text-slate-500">
-          Sign in, pick a model, and refine your text with Cloudflare Workers
-          AI.
+          {{ t("subtitle") }}
         </p>
       </header>
 
@@ -157,31 +206,35 @@ const copyPolishedText = () => {
         <!-- Auth row -->
         <div class="grid grid-cols-2 gap-4">
           <label class="block">
-            <span class="text-sm font-medium text-slate-600">Account</span>
+            <span class="text-sm font-medium text-slate-600">
+              {{ t("username") }}
+            </span>
             <input
               v-model="username"
               autocomplete="username"
-              required
               class="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-400 focus:ring-2 focus:ring-indigo-200 focus:outline-none transition"
-              placeholder="Your username"
+              :placeholder="t('usernamePlaceholder')"
             />
           </label>
           <label class="block">
-            <span class="text-sm font-medium text-slate-600">Password</span>
+            <span class="text-sm font-medium text-slate-600">
+              {{ t("password") }}
+            </span>
             <input
               v-model="password"
               type="password"
               autocomplete="current-password"
-              required
               class="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-400 focus:ring-2 focus:ring-indigo-200 focus:outline-none transition"
-              placeholder="Your password"
+              :placeholder="t('passwordPlaceholder')"
             />
           </label>
         </div>
 
         <!-- Model selector -->
         <label class="block">
-          <span class="text-sm font-medium text-slate-600">AI Model</span>
+          <span class="text-sm font-medium text-slate-600">
+            {{ t("model") }}
+          </span>
           <select
             v-model="selectedModel"
             class="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-400 focus:ring-2 focus:ring-indigo-200 focus:outline-none transition bg-white"
@@ -194,13 +247,15 @@ const copyPolishedText = () => {
 
         <!-- Text input -->
         <label class="block">
-          <span class="text-sm font-medium text-slate-600">Text to refine</span>
+          <span class="text-sm font-medium text-slate-600">
+            {{ t("textLabel") }}
+          </span>
           <textarea
             v-model="text"
             rows="6"
             required
             class="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-400 focus:ring-2 focus:ring-indigo-200 focus:outline-none transition resize-y"
-            placeholder="Paste your text here..."
+            :placeholder="t('textPlaceholder')"
           />
         </label>
 
@@ -210,7 +265,7 @@ const copyPolishedText = () => {
           :disabled="loading"
           class="w-full rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-400 disabled:opacity-50 disabled:cursor-not-allowed transition cursor-pointer"
         >
-          {{ loading ? "Polishing..." : "Polish Text" }}
+          {{ loading ? t("polishing") : t("polishButton") }}
         </button>
       </form>
 
@@ -229,7 +284,9 @@ const copyPolishedText = () => {
         class="mt-6 rounded-2xl border border-green-200 bg-white shadow-md p-6"
       >
         <div class="flex items-center justify-between mb-3">
-          <h2 class="text-lg font-semibold text-slate-800">✨ Polished Text</h2>
+          <h2 class="text-lg font-semibold text-slate-800">
+            {{ t("polishedTitle") }}
+          </h2>
           <button
             @click="copyPolishedText"
             class="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-300 transition cursor-pointer"
@@ -257,7 +314,7 @@ const copyPolishedText = () => {
             >
               <polyline points="20 6 9 17 4 12" />
             </svg>
-            {{ copied ? "Copied!" : "Copy" }}
+            {{ copied ? t("copied") : t("copy") }}
           </button>
         </div>
         <p class="text-slate-700 whitespace-pre-wrap leading-relaxed">
@@ -267,7 +324,7 @@ const copyPolishedText = () => {
 
       <!-- Footer -->
       <footer class="mt-10 text-center text-xs text-slate-400">
-        Powered by Cloudflare Workers AI · Models may vary in speed and quality
+        {{ t("footer") }}
       </footer>
     </main>
   </div>
