@@ -2,9 +2,9 @@
 
 [English](README.md) · [Deutsch](README.de.md) · [简体中文](README.zh-CN.md)
 
-A Cloudflare Workers application built with Bun, TypeScript, Vite, and Vue that refines text using Workers AI. Try the [live demo](https://quick-language-polish.karsten-zhou-773.workers.dev/).
+A Cloudflare Workers application built with Bun, TypeScript, Vite, and Vue that refines text using Workers AI. Try the [live demo](https://quick-language-polish.karsten-zhou-773.workers.dev/) using username `your-username` and password `your-password`.
 
-For everyday use, deploy your own instance to Cloudflare to use your own free Workers AI quota. You can one-click deploy with the button above, or follow the manual setup below.
+For everyday use, deploy your own instance to Cloudflare to use your own free Workers AI quota. You can one-click deploy with the button below, or follow the manual setup.
 
 [![Deploy to Cloudflare Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/XiaoSong-CPE/quick-language-polish)
 

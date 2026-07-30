@@ -2,9 +2,9 @@
 
 [English](README.md) · [Deutsch](README.de.md) · [简体中文](README.zh-CN.md)
 
-Eine Cloudflare-Workers-App auf Basis von Bun, TypeScript, Vite und Vue, die Texte mit Workers AI verfeinert. Probieren Sie die [Live-Demo](https://quick-language-polish.karsten-zhou-773.workers.dev/).
+Eine Cloudflare-Workers-App auf Basis von Bun, TypeScript, Vite und Vue, die Texte mit Workers AI verfeinert. Probieren Sie die [Live-Demo](https://quick-language-polish.karsten-zhou-773.workers.dev/) mit dem Benutzernamen `your-username` und Passwort `your-password` aus.
 
-Für den produktiven Einsatz stellen Sie Ihre eigene Instanz mit Ihrem eigenen kostenlosen Cloudflare-Kontingent bereit. Mit dem Button oben können Sie per Klick deployen, oder folgen Sie der manuellen Einrichtung unten.
+Für den produktiven Einsatz stellen Sie Ihre eigene Instanz mit Ihrem eigenen kostenlosen Cloudflare-Kontingent bereit. Mit dem Button unten können Sie per Klick deployen, oder folgen Sie der manuellen Einrichtung.
 
 [![Auf Cloudflare Workers deployen](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/XiaoSong-CPE/quick-language-polish)
 

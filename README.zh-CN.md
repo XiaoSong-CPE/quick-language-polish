@@ -2,9 +2,9 @@
 
 [English](README.md) · [Deutsch](README.de.md) · [简体中文](README.zh-CN.md)
 
-一个基于 Bun、TypeScript、Vite 和 Vue 构建、运行于 Cloudflare Workers 的应用，使用 Workers AI 对文本进行润色。试用[在线演示](https://quick-language-polish.karsten-zhou-773.workers.dev/)。
+一个基于 Bun、TypeScript、Vite 和 Vue 构建、运行于 Cloudflare Workers 的应用，使用 Workers AI 对文本进行润色。试用[在线演示](https://quick-language-polish.karsten-zhou-773.workers.dev/)，使用用户名 `your-username` 和密码 `your-password`。
 
-如需长期使用，建议部署属于您自己的实例，以使用 Cloudflare 提供的免费 Workers AI 配额。您可以点击上方按钮一键部署，也可以按照下方步骤手动设置。
+如需长期使用，建议部署属于您自己的实例，以使用 Cloudflare 提供的免费 Workers AI 配额。您可以点击下方按钮一键部署，也可以按照步骤手动设置。
 
 [![部署到 Cloudflare Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/XiaoSong-CPE/quick-language-polish)
 
