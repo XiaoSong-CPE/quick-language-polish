@@ -7,6 +7,7 @@ const MODELS = [
   { id: "@cf/qwen/qwen3-30b-a3b-fp8", label: "Qwen 3 30B" },
   { id: "@cf/google/gemma-4-26b-a4b-it", label: "Gemma 4 26B" },
   { id: "@cf/openai/gpt-oss-120b", label: "GPT-OSS 120B" },
+  { id: "@cf/moonshotai/kimi-k2.6", label: "Kimi K2.6" },
 ] as const;
 
 const username = useLocalStorage("qlp-username", "");

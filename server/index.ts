@@ -24,6 +24,7 @@ const AVAILABLE_MODELS = [
   "@cf/qwen/qwen3-30b-a3b-fp8",
   "@cf/google/gemma-4-26b-a4b-it",
   "@cf/openai/gpt-oss-120b",
+  "@cf/moonshotai/kimi-k2.6",
 ] as const;
 
 const requestSchema = z.object({
