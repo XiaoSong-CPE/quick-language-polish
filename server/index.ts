@@ -33,7 +33,7 @@ const requestSchema = z.object({
     .string()
     .trim()
     .min(1, "Please enter some text.")
-    .max(4000, "Text is too long."),
+    .max(4 * 1024, "Text is too long."),
   model: z.string().optional(),
 });
 
@@ -110,6 +110,7 @@ app.post(
       const result = await c.env.AI.run(model, {
         messages: [{ role: "user", content: createPrompt(text) }],
         stream: true,
+        max_tokens: 4 * 1024,
       });
 
       // Pass the CF AI stream through directly — the client will parse the raw CF SSE format
