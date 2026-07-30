@@ -1,6 +1,5 @@
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
-import { basicAuth } from "hono/basic-auth";
 import { StatusCodes } from "http-status-codes";
 import { z } from "zod";
 
@@ -68,17 +67,43 @@ app.post(
   "/api/polish",
   // Only require auth when credentials are configured.
   // When AUTH_USERNAME or AUTH_PASSWORD is missing, the endpoint is open.
+  // Manual Basic Auth check (no WWW-Authenticate header) to avoid triggering
+  // the browser's native auth dialog on failure.
   async (c, next) => {
     const user = c.env.AUTH_USERNAME?.trim();
     const pass = c.env.AUTH_PASSWORD?.trim();
-    if (user && pass) {
-      const auth = basicAuth({
-        verifyUser: (username, password) =>
-          username === user && password === pass,
-      });
-      await auth(c, next);
-    } else {
+    if (!user || !pass) {
       await next();
+      return;
+    }
+
+    const authHeader = c.req.header("Authorization");
+    if (!authHeader || !authHeader.startsWith("Basic ")) {
+      return c.json(
+        { error: "Authentication required." },
+        StatusCodes.UNAUTHORIZED,
+      );
+    }
+
+    try {
+      const decoded = atob(authHeader.slice(6));
+      const colonIdx = decoded.indexOf(":");
+      const reqUser = colonIdx >= 0 ? decoded.slice(0, colonIdx) : decoded;
+      const reqPass = colonIdx >= 0 ? decoded.slice(colonIdx + 1) : "";
+
+      if (reqUser === user && reqPass === pass) {
+        await next();
+      } else {
+        return c.json(
+          { error: "Invalid username or password." },
+          StatusCodes.UNAUTHORIZED,
+        );
+      }
+    } catch {
+      return c.json(
+        { error: "Invalid authorization header." },
+        StatusCodes.UNAUTHORIZED,
+      );
     }
   },
   zValidator("json", requestSchema, (validationResult, c) => {
